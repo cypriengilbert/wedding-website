@@ -1,150 +1,234 @@
 <?php
-declare(strict_types=1);
-@ini_set('display_errors', '1');
-@error_reporting(E_ALL);
-@date_default_timezone_set('UTC');
+session_start();
+require_once __DIR__ . '/db/config.php';
 
-$phpVersion = PHP_VERSION;
-$now = date('Y-m-d H:i:s');
+$guest = null;
+$events = [];
+$error_message = '';
+$success_message = '';
+
+// Logout logic
+if (isset($_GET['logout'])) {
+    session_destroy();
+    header('Location: /#rsvp');
+    exit;
+}
+
+// Check if a guest is already in session
+if (isset($_SESSION['guest_id'])) {
+    $pdo = db();
+    $stmt = $pdo->prepare("SELECT * FROM guests WHERE id = ?");
+    $stmt->execute([$_SESSION['guest_id']]);
+    $guest = $stmt->fetch(PDO::FETCH_ASSOC);
+}
+
+// Handle form submissions
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $pdo = db();
+    if (isset($_POST['email'])) {
+        // Email check
+        $stmt = $pdo->prepare("SELECT * FROM guests WHERE email = ?");
+        $stmt->execute([$_POST['email']]);
+        $guest = $stmt->fetch(PDO::FETCH_ASSOC);
+
+        if ($guest) {
+            $_SESSION['guest_id'] = $guest['id'];
+        } else {
+            $error_message = "Désolé, votre email n'a pas été trouvé. Veuillez vérifier l'adresse ou nous contacter.";
+        }
+    } elseif (isset($_POST['update_rsvp']) && $guest) {
+        // RSVP update
+        $person_count = isset($_POST['person_count']) ? intval($_POST['person_count']) : 1;
+
+        foreach ($_POST['events'] as $event_id => $status) {
+            $stmt = $pdo->prepare("UPDATE invitations SET attending = ? WHERE guest_id = ? AND event_id = ?");
+            $stmt->execute([$status === 'yes' ? 1 : 0, $guest['id'], $event_id]);
+        }
+        
+        // This is a simplified update for person_count, assuming it applies to all 'yes' responses.
+        $stmt = $pdo->prepare("UPDATE invitations SET person_count = ? WHERE guest_id = ? AND attending = 1");
+        $stmt->execute([$person_count, $guest['id']]);
+
+        $success_message = "Merci ! Votre réponse a été enregistrée.";
+        // Refresh guest data to show updated status
+        $stmt = $pdo->prepare("SELECT * FROM guests WHERE id = ?");
+        $stmt->execute([$guest['id']]);
+        $guest = $stmt->fetch(PDO::FETCH_ASSOC);
+    }
+}
+
+// If a guest is identified, fetch their invitations
+if ($guest) {
+    $pdo = db();
+    $stmt = $pdo->prepare("
+        SELECT e.id, e.name, i.attending, i.person_count
+        FROM invitations i
+        JOIN events e ON i.event_id = e.id
+        WHERE i.guest_id = ?
+        ORDER BY e.id
+    ");
+    $stmt->execute([$guest['id']]);
+    $events = $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
 ?>
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="fr">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>New Style</title>
-<?php
-// Read project preview data from environment
-$projectDescription = $_SERVER['PROJECT_DESCRIPTION'] ?? '';
-$projectImageUrl = $_SERVER['PROJECT_IMAGE_URL'] ?? '';
-?>
-<?php if ($projectDescription): ?>
-  <!-- Meta description -->
-  <meta name="description" content='<?= htmlspecialchars($projectDescription) ?>' />
-  <!-- Open Graph meta tags -->
-  <meta property="og:description" content="<?= htmlspecialchars($projectDescription) ?>" />
-  <!-- Twitter meta tags -->
-  <meta property="twitter:description" content="<?= htmlspecialchars($projectDescription) ?>" />
-<?php endif; ?>
-<?php if ($projectImageUrl): ?>
-  <!-- Open Graph image -->
-  <meta property="og:image" content="<?= htmlspecialchars($projectImageUrl) ?>" />
-  <!-- Twitter image -->
-  <meta property="twitter:image" content="<?= htmlspecialchars($projectImageUrl) ?>" />
-<?php endif; ?>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
-  <style>
-    :root {
-      --bg-color-start: #6a11cb;
-      --bg-color-end: #2575fc;
-      --text-color: #ffffff;
-      --card-bg-color: rgba(255, 255, 255, 0.01);
-      --card-border-color: rgba(255, 255, 255, 0.1);
-    }
-    body {
-      margin: 0;
-      font-family: 'Inter', sans-serif;
-      background: linear-gradient(45deg, var(--bg-color-start), var(--bg-color-end));
-      color: var(--text-color);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      text-align: center;
-      overflow: hidden;
-      position: relative;
-    }
-    body::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><path d="M-10 10L110 10M10 -10L10 110" stroke-width="1" stroke="rgba(255,255,255,0.05)"/></svg>');
-      animation: bg-pan 20s linear infinite;
-      z-index: -1;
-    }
-    @keyframes bg-pan {
-      0% { background-position: 0% 0%; }
-      100% { background-position: 100% 100%; }
-    }
-    main {
-      padding: 2rem;
-    }
-    .card {
-      background: var(--card-bg-color);
-      border: 1px solid var(--card-border-color);
-      border-radius: 16px;
-      padding: 2rem;
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1);
-    }
-    .loader {
-      margin: 1.25rem auto 1.25rem;
-      width: 48px;
-      height: 48px;
-      border: 3px solid rgba(255, 255, 255, 0.25);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-    }
-    @keyframes spin {
-      from { transform: rotate(0deg); }
-      to   { transform: rotate(360deg); }
-    }
-    .hint {
-      opacity: 0.9;
-    }
-    .sr-only {
-      position: absolute;
-      width: 1px; height: 1px;
-      padding: 0; margin: -1px;
-      overflow: hidden;
-      clip: rect(0, 0, 0, 0);
-      white-space: nowrap; border: 0;
-    }
-    h1 {
-      font-size: 3rem;
-      font-weight: 700;
-      margin: 0 0 1rem;
-      letter-spacing: -1px;
-    }
-    p {
-      margin: 0.5rem 0;
-      font-size: 1.1rem;
-    }
-    code {
-      background: rgba(0,0,0,0.2);
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    }
-    footer {
-      position: absolute;
-      bottom: 1rem;
-      font-size: 0.8rem;
-      opacity: 0.7;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mariage de J & M</title>
+    <meta name="description" content="<?php echo htmlspecialchars($_SERVER['PROJECT_DESCRIPTION'] ?? 'Site de mariage pour J & M'); ?>">
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="assets/css/custom.css?v=<?php echo time(); ?>">
+
+    <!-- Meta tags for social sharing -->
+    <meta property="og:title" content="Mariage de J & M">
+    <meta property="og:description" content="<?php echo htmlspecialchars($_SERVER['PROJECT_DESCRIPTION'] ?? 'Nous nous marions ! Rejoignez-nous pour célébrer.'); ?>">
+    <meta property="og:image" content="<?php echo htmlspecialchars($_SERVER['PROJECT_IMAGE_URL'] ?? ''); ?>">
+    <meta property="og:url" content="<?php echo (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://$_SERVER[HTTP_HOST]$_SERVER[REQUEST_URI]"; ?>">
+    <meta name="twitter:card" content="summary_large_image">
 </head>
 <body>
-  <main>
-    <div class="card">
-      <h1>Analyzing your requirements and generating your website…</h1>
-      <div class="loader" role="status" aria-live="polite" aria-label="Applying initial changes">
-        <span class="sr-only">Loading…</span>
-      </div>
-      <p class="hint"><?= ($_SERVER['HTTP_HOST'] ?? '') === 'appwizzy.com' ? 'AppWizzy' : 'Flatlogic' ?> AI is collecting your requirements and applying the first changes.</p>
-      <p class="hint">This page will update automatically as the plan is implemented.</p>
-      <p>Runtime: PHP <code><?= htmlspecialchars($phpVersion) ?></code> — UTC <code><?= htmlspecialchars($now) ?></code></p>
-    </div>
-  </main>
-  <footer>
-    Page updated: <?= htmlspecialchars($now) ?> (UTC)
-  </footer>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg fixed-top">
+        <div class="container">
+            <a class="navbar-brand" href="#hero">M&C</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="#hero">Accueil</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#info">Infos Pratiques</a></li>
+                    <li class="nav-item"><a class="nav-link" href="programme.php">Programme</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#rsvp">RSVP</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <header id="hero">
+        <img src="assets/pasted-20260104-105018-5b917867.png" alt="Illustration florale" class="illustration">
+        <h1>Mélanie & Cyprien</h1>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Info Section -->
+        <section id="info" class="section">
+            <div class="container">
+                <h2 class="section-title">Informations Pratiques</h2>
+                <div class="row text-center">
+                    <div class="col-md-6">
+                        <h3>Cérémonie</h3>
+                        <p>15h00 - Mairie de Quelque Part</p>
+                        <p>Adresse, 12345 Ville</p>
+                    </div>
+                    <div class="col-md-6">
+                        <h3>Réception</h3>
+                        <p>18h00 - Domaine de Rêve</p>
+                        <p>Adresse, 12345 Ville</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Programme Section -->
+        <section id="programme" class="section bg-light">
+            <div class="container">
+                <h2 class="section-title">Le Programme</h2>
+                <p class="text-center lead">Le déroulé de notre journée.</p>
+                <!-- Placeholder for programme details -->
+            </div>
+        </section>
+
+        <!-- RSVP Section -->
+        <section id="rsvp" class="section">
+            <div class="container">
+                <h2 class="section-title">RSVP</h2>
+                <div class="row">
+                    <div class="col-lg-8 mx-auto">
+                        <?php if ($success_message): ?>
+                            <div class="alert alert-success"><?php echo $success_message; ?></div>
+                        <?php endif; ?>
+                        <?php if ($error_message): ?>
+                            <div class="alert alert-danger"><?php echo $error_message; ?></div>
+                        <?php endif; ?>
+
+                        <?php if (!$guest): ?>
+                            <!-- Email Form -->
+                            <p class="text-center lead mb-4">Veuillez confirmer votre présence avant le 1er mai 2026.</p>
+                            <form action="#rsvp" method="post">
+                                <div class="mb-3">
+                                    <label for="email" class="form-label visually-hidden">Email</label>
+                                    <input type="email" class="form-control form-control-lg" id="email" name="email" placeholder="Entrez votre adresse email" required>
+                                </div>
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary">Trouver mon invitation</button>
+                                </div>
+                            </form>
+                        <?php else: ?>
+                            <!-- RSVP Form -->
+                            <div class="text-center">
+                                <h3>Bonjour, <?php echo htmlspecialchars($guest['name']); ?> !</h3>
+                                <p>Nous sommes ravis de vous inviter aux événements suivants. Merci de nous donner votre réponse pour chacun.</p>
+                                <p><a href="?logout=1">Ce n'est pas vous ?</a></p>
+                            </div>
+
+                            <form action="#rsvp" method="post">
+                                <input type="hidden" name="update_rsvp" value="1">
+                                
+                                <?php foreach ($events as $event): ?>
+                                <div class="mb-3 p-3 border rounded">
+                                    <h5 class="mb-3"><?php echo htmlspecialchars($event['name']); ?></h5>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="events[<?php echo $event['id']; ?>]" id="event-yes-<?php echo $event['id']; ?>" value="yes" <?php if ($event['attending'] === 1) echo 'checked'; ?> required>
+                                        <label class="form-check-label" for="event-yes-<?php echo $event['id']; ?>">Oui, je serai présent(e)</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input" type="radio" name="events[<?php echo $event['id']; ?>]" id="event-no-<?php echo $event['id']; ?>" value="no" <?php if ($event['attending'] === 0) echo 'checked'; ?> required>
+                                        <label class="form-check-label" for="event-no-<?php echo $event['id']; ?>">Non, je ne pourrai pas venir</label>
+                                    </div>
+                                </div>
+                                <?php endforeach; ?>
+
+                                <div class="mb-3">
+                                    <label for="person_count" class="form-label">Nombre de personnes au total (vous inclus)</label>
+                                    <input type="number" class="form-control" id="person_count" name="person_count" value="<?php echo htmlspecialchars($events[0]['person_count'] ?? 1); ?>" min="1" max="10">
+                                </div>
+
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary">Valider ma réponse</button>
+                                </div>
+                            </form>
+
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>Fait avec amour pour Mélanie &amp; Cyprien</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="assets/js/main.js?v=<?php echo time(); ?>"></script>
 </body>
 </html>
