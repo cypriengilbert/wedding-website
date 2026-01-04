@@ -120,6 +120,8 @@ if ($guest) {
     <header id="hero">
         <img src="assets/pasted-20260104-105018-5b917867.png" alt="Illustration florale" class="illustration">
         <h1>Mélanie & Cyprien</h1>
+        <h2>06 Juin 2026</h2>
+        <a href="#rsvp" class="btn btn-primary">Répondre</a>
     </header>
 
     <!-- Main Content -->
@@ -129,15 +131,20 @@ if ($guest) {
             <div class="container">
                 <h2 class="section-title">Informations Pratiques</h2>
                 <div class="row text-center">
-                    <div class="col-md-6">
-                        <h3>Cérémonie</h3>
-                        <p>15h00 - Mairie de Quelque Part</p>
-                        <p>Adresse, 12345 Ville</p>
+                    <div class="col-md-4">
+                        <h3>Mariage Civil</h3>
+                        <p>15h00 - Mairie d'Esternay</p>
+                        <p>10 Place du Général de Gaulle, 51310 Esternay</p>
                     </div>
-                    <div class="col-md-6">
-                        <h3>Réception</h3>
-                        <p>18h00 - Domaine de Rêve</p>
-                        <p>Adresse, 12345 Ville</p>
+                    <div class="col-md-4">
+                        <h3>Cérémonie</h3>
+                        <p>16h00 - Domaine Le Saint Léonard</p>
+                        <p>6 Rue de l'Église, 77151 Montceaux-lès-Provins</p>
+                    </div>
+                    <div class="col-md-4">
+                        <h3>Coktail</h3>
+                        <p>18h00 - Domaine Le Saint Léonard</p>
+                        <p>6 Rue de l'Église, 77151 Montceaux-lès-Provins</p>
                     </div>
                 </div>
             </div>
