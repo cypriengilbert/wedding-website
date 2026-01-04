@@ -129,7 +129,7 @@ if ($guest) {
         <!-- Info Section -->
         <section id="info" class="section">
             <div class="container">
-                <h2 class="section-title">Informations Pratiques</h2>
+                <h2 class="section-title">Le programme</h2>
                 <div class="row text-center">
                     <div class="col-md-4">
                         <h3>Mariage Civil</h3>
@@ -151,13 +151,7 @@ if ($guest) {
         </section>
 
         <!-- Programme Section -->
-        <section id="programme" class="section bg-light">
-            <div class="container">
-                <h2 class="section-title">Le Programme</h2>
-                <p class="text-center lead">Le déroulé de notre journée.</p>
-                <!-- Placeholder for programme details -->
-            </div>
-        </section>
+       
 
         <!-- RSVP Section -->
         <section id="rsvp" class="section">
