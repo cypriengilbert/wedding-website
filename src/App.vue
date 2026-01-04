@@ -34,6 +34,7 @@
         @search="handleSearch"
         @logout="handleLogout"
         @update-rsvp="handleUpdateRSVP"
+        @update-email="handleUpdateEmail"
       />
     </main>
 
@@ -51,7 +52,7 @@ import { ref, onMounted } from 'vue'
 import HeroSection from './components/HeroSection.vue'
 import InfoSection from './components/InfoSection.vue'
 import RSVPSection from './components/RSVPSection.vue'
-import { findGuestByEmail, findGuestByName, getGuestInvitations, updateRSVP } from './services/guests'
+import { findGuestByEmail, findGuestByName, getGuestInvitations, updateRSVP, updateGuestEmail } from './services/guests'
 
 export default {
   name: 'App',
@@ -137,12 +138,33 @@ export default {
       window.location.hash = '#rsvp'
     }
 
+    // Gère la mise à jour de l'email
+    const handleUpdateEmail = async (email) => {
+      try {
+        await updateGuestEmail(guest.value.id, email)
+        // Met à jour l'email dans l'objet guest local
+        guest.value.email = email
+        // Met à jour le localStorage
+        localStorage.setItem('guest_id', email)
+      } catch (error) {
+        console.error('Erreur lors de la mise à jour de l\'email:', error)
+        errorMessage.value = "Une erreur s'est produite lors de l'enregistrement de l'email. Veuillez réessayer."
+        throw error
+      }
+    }
+
     // Gère la mise à jour du RSVP
-    const handleUpdateRSVP = async (eventsData, personCount) => {
+    const handleUpdateRSVP = async (eventsData, personCount, emailToUpdate = null) => {
       errorMessage.value = ''
       successMessage.value = ''
       
       try {
+        // Si un email doit être mis à jour, on le fait d'abord
+        if (emailToUpdate) {
+          await handleUpdateEmail(emailToUpdate)
+        }
+        
+        // Ensuite on met à jour le RSVP
         await updateRSVP(guest.value.id, eventsData, personCount)
         successMessage.value = "Merci ! Votre réponse a été enregistrée."
         
@@ -166,6 +188,7 @@ export default {
       successMessage,
       handleSearch,
       handleLogout,
+      handleUpdateEmail,
       handleUpdateRSVP
     }
   }

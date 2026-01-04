@@ -133,3 +133,19 @@ export async function updateRSVP(guestId, events, personCount) {
   return { success: true }
 }
 
+/**
+ * Met à jour l'email d'un invité
+ */
+export async function updateGuestEmail(guestId, email) {
+  const { error } = await supabase
+    .from('guests')
+    .update({ email })
+    .eq('id', guestId)
+
+  if (error) {
+    throw error
+  }
+
+  return { success: true }
+}
+

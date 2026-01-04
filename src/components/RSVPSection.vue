@@ -44,7 +44,7 @@
                   id="email" 
                   v-model="searchValue" 
                   placeholder="Entrez votre adresse email" 
-                  required
+                  
                 >
               </div>
               <template v-else>
@@ -88,6 +88,20 @@
             </div>
 
             <form @submit.prevent="handleRSVPSubmit">
+              <!-- Champ email si l'invité n'a pas d'email -->
+              <div v-if="!guest.email || guest.email === ''" class="mb-3 p-3 border rounded bg-light">
+                <label for="guest_email" class="form-label">Votre adresse email </label>
+                <input 
+                  type="email" 
+                  class="form-control" 
+                  id="guest_email" 
+                  v-model="guestEmail" 
+                  placeholder="votre.email@example.com" 
+                  required
+                >
+                <small class="form-text text-muted">Nous avons besoin de votre email pour vous contacter si nécessaire.</small>
+              </div>
+
               <div v-for="event in events" :key="event.id" class="mb-3 p-3 border rounded" :class="{ 'border-success': event.has_responded }">
                 <div class="d-flex justify-content-between align-items-center mb-2">
                   <h5 class="mb-0">{{ event.name }}</h5>
@@ -166,12 +180,13 @@ export default {
       default: ''
     }
   },
-  emits: ['login', 'logout', 'update-rsvp', 'search'],
+  emits: ['login', 'logout', 'update-rsvp', 'search', 'update-email'],
   setup(props, { emit }) {
     const searchMode = ref('email') // 'email' ou 'name'
     const searchValue = ref('')
     const firstName = ref('')
     const lastName = ref('')
+    const guestEmail = ref('')
     const rsvpData = ref({
       events: {},
       person_count: 1
@@ -194,6 +209,15 @@ export default {
       initializeRSVP()
     }, { immediate: true })
 
+    // Initialise l'email du guest s'il n'en a pas
+    watch(() => props.guest, (newGuest) => {
+      if (newGuest && (!newGuest.email || newGuest.email === '')) {
+        guestEmail.value = ''
+      } else if (newGuest && newGuest.email) {
+        guestEmail.value = newGuest.email
+      }
+    }, { immediate: true })
+
     const handleSearchSubmit = () => {
       if (searchMode.value === 'email') {
         emit('search', searchMode.value, searchValue.value)
@@ -210,7 +234,12 @@ export default {
     }
 
     const handleRSVPSubmit = () => {
-      emit('update-rsvp', rsvpData.value.events, rsvpData.value.person_count)
+      // Si l'invité n'a pas d'email et qu'un email a été saisi, on le passe avec le RSVP
+      const emailToUpdate = ((!props.guest.email || props.guest.email === '') && guestEmail.value && guestEmail.value.trim()) 
+        ? guestEmail.value.trim() 
+        : null
+      
+      emit('update-rsvp', rsvpData.value.events, rsvpData.value.person_count, emailToUpdate)
     }
 
     // Fonction pour obtenir le nom complet
@@ -232,6 +261,7 @@ export default {
       searchValue,
       firstName,
       lastName,
+      guestEmail,
       rsvpData,
       handleSearchSubmit,
       handleLogout,

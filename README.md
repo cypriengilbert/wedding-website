@@ -92,6 +92,11 @@ npm install
    CREATE POLICY "Allow public update on invitations" ON invitations
      FOR UPDATE USING (true);
 
+   -- Politiques RLS pour permettre la mise à jour de l'email des invités
+   CREATE POLICY "Allow public update email on guests" ON guests
+     FOR UPDATE USING (true)
+     WITH CHECK (true);
+
    -- Insérer les événements par défaut
    INSERT INTO events (name, description) VALUES 
      ('Mariage Civil', '15h00 - Mairie d''Esternay, 10 Place du Général de Gaulle, 51310 Esternay'),
