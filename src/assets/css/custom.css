@@ -133,12 +133,110 @@ h1, h2, h3, h4, h5, h6 {
     transform: translateY(-2px);
 }
 
+/* RSVP Section */
+#rsvp {
+    background-color: var(--primary-color);
+    color: var(--background-color);
+}
+
+#rsvp .section-title {
+    color: var(--background-color);
+}
+
+#rsvp p,
+#rsvp .lead {
+    color: var(--background-color);
+}
+
+#rsvp h3,
+#rsvp h5 {
+    color: var(--background-color);
+}
+
+#rsvp .text-muted {
+    color: rgba(244, 241, 222, 0.8) !important;
+}
+
+#rsvp a {
+    color: var(--background-color);
+    text-decoration: underline;
+}
+
+#rsvp a:hover {
+    color: var(--background-color);
+    opacity: 0.8;
+}
+
+/* Alerts on colored background */
+#rsvp .alert {
+    color: var(--text-color);
+}
+
 /* RSVP Form */
 #rsvp form {
     background-color: white;
     padding: 2.5rem;
     border-radius: 15px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    color: var(--text-color);
+}
+
+#rsvp form h3,
+#rsvp form h5 {
+    color: var(--text-color);
+}
+
+#rsvp form p {
+    color: var(--text-color);
+}
+
+#rsvp form .text-muted {
+    color: #6c757d !important;
+}
+
+/* Google Maps Button */
+.btn-maps {
+    color: var(--text-color);
+    border-color: var(--text-color);
+    background-color: transparent;
+}
+
+.btn-maps:hover {
+    color: white;
+    background-color: var(--text-color);
+    border-color: var(--text-color);
+}
+
+/* Search Tabs */
+#rsvp .nav-tabs {
+    border-bottom: 2px solid var(--background-color);
+}
+
+#rsvp .nav-tabs .nav-link {
+    color: var(--background-color);
+    border: none;
+    border-bottom: 3px solid transparent;
+    padding: 0.75rem 1.5rem;
+    transition: all 0.3s ease;
+    opacity: 0.6;
+    background-color: transparent;
+}
+
+#rsvp .nav-tabs .nav-link:hover {
+    border-bottom-color: var(--background-color);
+    color: var(--background-color);
+    opacity: 0.9;
+    background-color: rgba(244, 241, 222, 0.1);
+}
+
+#rsvp .nav-tabs .nav-link.active {
+    color: var(--background-color);
+    border-bottom-color: var(--background-color);
+    border-bottom-width: 4px;
+    font-weight: 700;
+    opacity: 1;
+    background-color: rgba(244, 241, 222, 0.2);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 /* Footer */
@@ -205,3 +303,4 @@ footer {
     border-radius: 50%;
     transform: translateX(-50%);
 }
+
