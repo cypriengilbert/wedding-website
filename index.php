@@ -156,7 +156,7 @@ if ($guest) {
         <!-- RSVP Section -->
         <section id="rsvp" class="section">
             <div class="container">
-                <h2 class="section-title">RSVP</h2>
+                <h2 class="section-title">Confirmation de votre présence</h2>
                 <div class="row">
                     <div class="col-lg-8 mx-auto">
                         <?php if ($success_message): ?>
@@ -168,7 +168,7 @@ if ($guest) {
 
                         <?php if (!$guest): ?>
                             <!-- Email Form -->
-                            <p class="text-center lead mb-4">Veuillez confirmer votre présence avant le 1er mai 2026.</p>
+                            <p class="text-center lead mb-4">Veuillez confirmer votre présence avant le 15 avril 2026.</p>
                             <form action="#rsvp" method="post">
                                 <div class="mb-3">
                                     <label for="email" class="form-label visually-hidden">Email</label>
@@ -223,7 +223,7 @@ if ($guest) {
     <!-- Footer -->
     <footer>
         <div class="container">
-            <p>Fait avec amour pour Mélanie &amp; Cyprien</p>
+            <p>Fait avec amour par Mélanie &amp; Cyprien</p>
         </div>
     </footer>
 
