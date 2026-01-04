@@ -121,7 +121,7 @@ if ($guest) {
         <img src="assets/pasted-20260104-105018-5b917867.png" alt="Illustration florale" class="illustration">
         <h1>Mélanie & Cyprien</h1>
         <h2>06 Juin 2026</h2>
-        <a href="#rsvp" class="btn btn-primary">Répondre</a>
+        <a href="#rsvp" class="btn btn-primary">Confirmer ma présence</a>
     </header>
 
     <!-- Main Content -->
