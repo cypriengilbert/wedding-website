@@ -47,6 +47,9 @@
     <footer>
       <div class="container">
         <p>Fait avec amour par Mélanie &amp; Cyprien</p>
+        <p>3 Rue Kuhlmann - Appartement D06 - 59000 Lille</p>
+        <p>melaniebarre51@hotmail.com - cypriengilbert@gmail.com</p>
+        <p>0633136418 - 0669113580</p>
       </div>
     </footer>
     </template>
@@ -115,7 +118,7 @@ export default {
         if (mode === 'email') {
           guestData = await findGuestByEmail(value1)
           if (!guestData) {
-            errorMessage.value = "Désolé, votre email n'a pas été trouvé. Veuillez vérifier l'adresse ou nous contacter."
+            errorMessage.value = "Désolé, votre email n'a pas été trouvé. Veuillez vérifier l'adresse ou nous contacter à cypriengilbert@gmail.com ou melaniebarre51@hotmail.com"
             return
           }
         } else if (mode === 'name') {
