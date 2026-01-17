@@ -1,5 +1,10 @@
 <template>
   <div>
+    <!-- Page Admin -->
+    <Admin v-if="isAdminPage" />
+    
+    <!-- Site principal -->
+    <template v-else>
     <!-- Navigation -->
     <nav class="navbar navbar-expand-lg fixed-top">
       <div class="container">
@@ -44,14 +49,16 @@
         <p>Fait avec amour par Mélanie &amp; Cyprien</p>
       </div>
     </footer>
+    </template>
   </div>
 </template>
 
 <script>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import HeroSection from './components/HeroSection.vue'
 import InfoSection from './components/InfoSection.vue'
 import RSVPSection from './components/RSVPSection.vue'
+import Admin from './components/Admin.vue'
 import { findGuestByEmail, findGuestByName, getGuestInvitations, updateRSVP, updateGuestEmail } from './services/guests'
 
 export default {
@@ -59,9 +66,14 @@ export default {
   components: {
     HeroSection,
     InfoSection,
-    RSVPSection
+    RSVPSection,
+    Admin
   },
   setup() {
+    // Vérifie si on est sur la page admin
+    const isAdminPage = computed(() => {
+      return window.location.hash === '#admin' || window.location.pathname.includes('/admin')
+    })
     const guest = ref(null)
     const events = ref([])
     const errorMessage = ref('')
@@ -182,6 +194,7 @@ export default {
     })
 
     return {
+      isAdminPage,
       guest,
       events,
       errorMessage,

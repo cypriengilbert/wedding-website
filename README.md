@@ -92,6 +92,19 @@ npm install
    CREATE POLICY "Allow public update on invitations" ON invitations
      FOR UPDATE USING (true);
 
+   -- Politiques RLS pour permettre la création d'invitations
+   CREATE POLICY "Allow public insert on invitations" ON invitations
+     FOR INSERT WITH CHECK (true);
+
+   -- Politiques RLS pour permettre la suppression d'invitations
+   CREATE POLICY "Allow public delete on invitations" ON invitations
+     FOR DELETE USING (true);
+
+   -- Politiques RLS pour permettre la mise à jour de l'email des invités
+   CREATE POLICY "Allow public update email on guests" ON guests
+     FOR UPDATE USING (true)
+     WITH CHECK (true);
+
    -- Politiques RLS pour permettre la mise à jour de l'email des invités
    CREATE POLICY "Allow public update email on guests" ON guests
      FOR UPDATE USING (true)
@@ -112,6 +125,19 @@ npm install
    
    -- Ajouter le champ responded_at à la table invitations
    ALTER TABLE invitations ADD COLUMN IF NOT EXISTS responded_at TIMESTAMP WITH TIME ZONE;
+   
+   -- Ajouter la politique RLS pour permettre la suppression d'invitations (si pas déjà fait)
+   DO $$
+   BEGIN
+     IF NOT EXISTS (
+       SELECT 1 FROM pg_policies 
+       WHERE tablename = 'invitations' 
+       AND policyname = 'Allow public delete on invitations'
+     ) THEN
+       CREATE POLICY "Allow public delete on invitations" ON invitations
+         FOR DELETE USING (true);
+     END IF;
+   END $$;
    
    -- Migrer de name vers firstname et lastname (si la table guests existe avec name)
    DO $$
